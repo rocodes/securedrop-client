@@ -625,7 +625,6 @@ class Controller(QObject):
         for missed_file in missing_files:
             self.file_missing.emit(missed_file.source.uuid, missed_file.uuid, str(missed_file))
         self.update_sources()
-        self.gui.refresh_current_source_conversation()
         self.download_new_messages()
         self.download_new_replies()
         self.sync_succeeded.emit()
@@ -1020,7 +1019,6 @@ class Controller(QObject):
         """
         logger.info("Conversation %s successfully deleted at server", uuid)
         self.conversation_deletion_successful.emit(uuid, datetime.utcnow())
-        self.api_sync.sync()
 
     def on_delete_conversation_failure(self, e: Exception) -> None:
         if isinstance(e, DeleteConversationJobException):
@@ -1034,7 +1032,9 @@ class Controller(QObject):
         Rely on sync to delete the source locally so we know for sure it was deleted
         """
         logger.info("Source %s successfully deleted at server", source_uuid)
+        # TODO: Use a success signal and remove `refresh_current_source_conversation`
         self.api_sync.sync()
+        self.gui.refresh_current_source_conversation()
 
     def on_delete_source_failure(self, e: Exception) -> None:
         if isinstance(e, DeleteSourceJobException):
